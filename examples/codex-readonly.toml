@@ -1,7 +1,7 @@
 # Replace the example API URL and absolute token-file path before use.
 [mcp_servers.gitlab_legacy]
 command = "npx"
-args = ["-y", "gitlab-mcp-legacy@0.1.0"]
+args = ["-y", "gitlab-mcp-legacy@0.1.1"]
 enabled = true
 default_tools_approval_mode = "writes"
 enabled_tools = [

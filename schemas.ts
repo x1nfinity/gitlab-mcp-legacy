@@ -1763,6 +1763,8 @@ export const GitLabMergeRequestSchema = z.object({
   id: z.coerce.string(),
   iid: z.coerce.string(),
   project_id: z.coerce.string(),
+  source_project_id: z.coerce.string().nullable().optional(),
+  target_project_id: z.coerce.string().nullable().optional(),
   title: z.string(),
   description: z.string().nullable(),
   state: z.string(),

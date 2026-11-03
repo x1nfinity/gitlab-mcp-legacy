@@ -1,6 +1,6 @@
 {
   "name": "gitlab-mcp-legacy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "mcpName": "io.github.x1nfinity/gitlab-mcp-legacy",
   "description": "GitLab MCP server with GitLab 11.11 compatibility for repositories, merge requests, pipelines, and more.",
   "keywords": [

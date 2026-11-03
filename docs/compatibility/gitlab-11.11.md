@@ -16,6 +16,12 @@ GitLab upgrade. If version detection fails while old-instance authentication
 is selected, version-dependent operations return an actionable error.
 `auto_merge` also requires a readable version endpoint before any merge request.
 
+## Merge-request project identity
+
+Merge-request responses retain `source_project_id` and `target_project_id`,
+including distinct IDs for fork merge requests. Missing IDs remain absent and
+explicit null values remain null; neither is inferred from `project_id`.
+
 ## Core workflows
 
 | Area                 | GitLab 11.11 behavior                                                                                                                                                                                                                                            |

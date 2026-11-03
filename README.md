@@ -10,7 +10,7 @@ A GitLab MCP fork for core repository, merge-request and pipeline workflows on l
 ## 快速开始：本地 stdio，只读
 
 使用 **Node.js 22.23.4**；本地开发使用 npm 和仓库中的 `package-lock.json`。
-以下配置通过 `npx -y gitlab-mcp-legacy@0.1.0` 启动固定版本。
+以下配置通过 `npx -y gitlab-mcp-legacy@0.1.1` 启动固定版本。
 运行 MCP 客户端的环境需要能够找到 `npx`，首次启动需要能够访问 npm registry。
 
 ### 1. 准备本地 Token 文件
@@ -37,7 +37,7 @@ chmod 600 /absolute/path/to/gitlab-token
 # Replace the example API URL and absolute token-file path before use.
 [mcp_servers.gitlab_legacy]
 command = "npx"
-args = ["-y", "gitlab-mcp-legacy@0.1.0"]
+args = ["-y", "gitlab-mcp-legacy@0.1.1"]
 enabled = true
 default_tools_approval_mode = "writes"
 enabled_tools = [

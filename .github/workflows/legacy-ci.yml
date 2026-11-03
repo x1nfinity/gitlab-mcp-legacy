@@ -43,6 +43,7 @@ jobs:
         run: |
           node --import tsx/esm --test --experimental-test-isolation=none --test-concurrency=1 \
             test/gitlab-11-response-schema.test.ts \
+            test/merge-request-project-identity-schema.test.ts \
             test/test-gitlab-11-core.ts \
             test/server/version.test.ts \
             test/mcp-server-name.test.ts \
