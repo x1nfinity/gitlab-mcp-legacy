@@ -7,7 +7,7 @@ body:
       value: |
         Do not report a security vulnerability here.
         Use GitHub private vulnerability reporting instead.
-        https://github.com/zereight/gitlab-mcp/security/advisories/new
+        https://github.com/x1nfinity/gitlab-mcp-legacy/security/advisories/new
   - type: textarea
     id: problem
     attributes:

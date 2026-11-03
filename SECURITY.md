@@ -2,7 +2,7 @@
 
 ## Report a vulnerability
 
-Report a vulnerability with [GitHub private vulnerability reporting](https://github.com/zereight/gitlab-mcp/security/advisories/new).
+Report a vulnerability with [GitHub private vulnerability reporting](https://github.com/x1nfinity/gitlab-mcp-legacy/security/advisories/new).
 
 Do not report a vulnerability in a public GitHub issue. A public issue shows the details before a fix is available.
 
@@ -10,14 +10,22 @@ Include the package version, the impact, and steps to reproduce. Remove tokens, 
 
 ## Supported versions
 
-Security fixes are provided for the latest 2.x release.
+Security fixes are provided for the latest release on the 0.1.x line of `gitlab-mcp-legacy`.
 
 | Version        | Supported |
 | -------------- | --------- |
-| Latest 2.x     | Yes       |
+| Latest 0.1.x   | Yes       |
 | Older releases | No        |
 
-The support policy, including security-only support for 2.x after v3.0 is released, is in [RELEASING.md](RELEASING.md#supported-versions).
+See [RELEASING.md](RELEASING.md#supported-versions) for the release and support policy.
+
+## GitLab compatibility
+
+GitLab 11.11 compatibility covers the core REST API v4 workflows described in
+[the compatibility guide](docs/compatibility/gitlab-11.11.md). Availability still
+depends on the GitLab edition, license, and token permissions. Local contract and
+MCP mock tests do not establish acceptance for every deployment; verify real
+writes in a dedicated test project before using business repositories.
 
 ## Security controls
 

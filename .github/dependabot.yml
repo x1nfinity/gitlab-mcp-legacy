@@ -8,7 +8,7 @@ updates:
     labels:
       - dependencies
       - no-changelog
-    # Match a short npm publish soak; auto-merge.yml still merges patch only.
+    # Allow three days for npm releases to settle before review.
     cooldown:
       default-days: 3
     groups:

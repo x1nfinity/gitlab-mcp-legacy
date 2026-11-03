@@ -1,6 +1,6 @@
-# Code owners for zereight/gitlab-mcp.
+# Code owners for x1nfinity/gitlab-mcp-legacy.
 #
-# Every path is owned by @zereight today. The explicit entries below mark
+# Every path is owned by @x1nfinity today. The explicit entries below mark
 # release, supply-chain, and auth-sensitive paths so that more owners can be
 # added per area later without changing the catch-all.
 #
@@ -9,36 +9,36 @@
 # branch protection on main requires review from Code Owners.
 # See RELEASING.md for what needs maintainer approval before a release.
 
-*                                   @zereight
+*                                   @x1nfinity
 
 # Ownership and release policy
-/.github/CODEOWNERS                 @zereight
-/RELEASING.md                       @zereight
-/SECURITY.md                        @zereight
+/.github/CODEOWNERS                 @x1nfinity
+/RELEASING.md                       @x1nfinity
+/SECURITY.md                        @x1nfinity
 
 # CI and publish workflows
-/.github/workflows/                 @zereight
+/.github/workflows/                 @x1nfinity
 
 # Release and publish scripts
-/scripts/release.sh                 @zereight
-/scripts/merge-changelog-fragments.mjs @zereight
-/scripts/publish_mcp_registry.sh    @zereight
-/scripts/pack-mcpb.sh               @zereight
-/scripts/sync-homebrew-formula.sh   @zereight
+/scripts/release.sh                 @x1nfinity
+/scripts/merge-changelog-fragments.mjs @x1nfinity
+/scripts/publish_mcp_registry.sh    @x1nfinity
+/scripts/pack-mcpb.sh               @x1nfinity
+/scripts/sync-homebrew-formula.sh   @x1nfinity
 
 # Package, image, and registry metadata
-/package.json                       @zereight
-/package-lock.json                  @zereight
-/.npmrc                             @zereight
-/Dockerfile                         @zereight
-/server.json                        @zereight
-/manifest.json                      @zereight
-/Formula/                           @zereight
+/package.json                       @x1nfinity
+/package-lock.json                  @x1nfinity
+/.npmrc                             @x1nfinity
+/Dockerfile                         @x1nfinity
+/server.json                        @x1nfinity
+/manifest.json                      @x1nfinity
+/Formula/                           @x1nfinity
 
 # Authentication, OAuth, and token handling
-/auth-cli.ts                        @zereight
-/auth-retry.ts                      @zereight
-/oauth*.ts                          @zereight
-/personal-access-token.ts           @zereight
-/stateless/                         @zereight
-/utils/download-token.ts            @zereight
+/auth-cli.ts                        @x1nfinity
+/auth-retry.ts                      @x1nfinity
+/oauth*.ts                          @x1nfinity
+/personal-access-token.ts           @x1nfinity
+/stateless/                         @x1nfinity
+/utils/download-token.ts            @x1nfinity
