@@ -291,7 +291,7 @@ import {
   type MaskingEngine,
 } from "./masking/index.js";
 import { checkForNewVersion } from "./utils/version-check.js";
-import { assertGitLabVersionAtLeast } from "./utils/gitlab-version-gate.js";
+import { assertGitLabVersionAtLeast, parseGitLabVersion } from "./utils/gitlab-version-gate.js";
 import {
   createUnsupportedWidgetSelections,
   mergeUnsupportedWidgetSelections,
@@ -836,11 +836,11 @@ const maskingPolicyResolver = createMaskingPolicyResolver({
   workspaceDir: GITLAB_MASKING_WORKSPACE_DIR,
 });
 
-const SERVER_NAME = process.env.MCP_SERVER_NAME?.trim() || "zereight-gitlab-mcp-server";
+const SERVER_NAME = process.env.MCP_SERVER_NAME?.trim() || "gitlab-mcp-legacy";
 // No `title`: clients would show it instead of `name`, hiding MCP_SERVER_NAME.
 const SERVER_DESCRIPTION =
-  "GitLab MCP server for projects, merge requests, issues, pipelines, wiki, releases, and more.";
-const SERVER_WEBSITE_URL = "https://zereight.github.io/gitlab-mcp/";
+  "GitLab MCP server with GitLab 11.11 compatibility for repositories, merge requests, pipelines, and more.";
+const SERVER_WEBSITE_URL = "https://github.com/x1nfinity/gitlab-mcp-legacy";
 
 /**
  * Error text for a call to a tool that tools/list omits.
@@ -2239,7 +2239,7 @@ if (
   logger.info(
     "Either set GITLAB_PERSONAL_ACCESS_TOKEN (or --token, or GITLAB_PERSONAL_ACCESS_TOKEN_FILE), " +
       "GITLAB_JOB_TOKEN, or GITLAB_AUTH_COOKIE_PATH, or enable OAuth with GITLAB_USE_OAUTH=true. " +
-      `Setup guide: ${SERVER_WEBSITE_URL}getting-started/`
+      `Setup guide: ${SERVER_WEBSITE_URL}#readme`
   );
   exitAfterFlush(1);
 }
@@ -4963,6 +4963,8 @@ async function createMergeRequest(
   projectId: string,
   options: z.infer<typeof CreateMergeRequestOptionsSchema>
 ): Promise<GitLabMergeRequest> {
+  await rejectGitLab11Parameters(options, ["reviewer_ids"]);
+  const legacyDraft = options.draft !== undefined && (await isGitLab11());
   projectId = decodeURIComponent(projectId); // Decode project ID
   const url = new URL(
     `${getEffectiveApiUrl()}/projects/${encodeGitLabPathSegment(getEffectiveProjectId(projectId))}/merge_requests`
@@ -4976,7 +4978,9 @@ async function createMergeRequest(
     ...getFetchConfig(),
     method: "POST",
     body: JSON.stringify({
-      title: options.title,
+      title: legacyDraft
+        ? gitLab11DraftTitle(options.title, options.draft === true)
+        : options.title,
       description: options.description,
       source_branch: options.source_branch,
       target_branch: options.target_branch,
@@ -4985,7 +4989,7 @@ async function createMergeRequest(
       reviewer_ids: options.reviewer_ids,
       labels: options.labels?.join(","),
       allow_collaboration: options.allow_collaboration,
-      draft: options.draft,
+      draft: legacyDraft ? undefined : options.draft,
       remove_source_branch: options.remove_source_branch,
       squash: options.squash,
     }),
@@ -6149,6 +6153,24 @@ async function listMergeRequestDiffs(
   perPage?: number,
   unidiff?: boolean
 ): Promise<any> {
+  if (await isGitLab11()) {
+    if (unidiff) throw new ToolInputError("unidiff is not supported by GitLab 11.x.");
+    const currentPage = page ?? 1;
+    const pageSize = perPage ?? 20;
+    if (
+      !Number.isInteger(currentPage) ||
+      currentPage < 1 ||
+      !Number.isInteger(pageSize) ||
+      pageSize < 1 ||
+      pageSize > 100
+    ) {
+      throw new ToolInputError(
+        "page must be a positive integer and per_page must be between 1 and 100."
+      );
+    }
+    const changes = await getMergeRequestDiffs(projectId, mergeRequestIid, branchName);
+    return changes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }
   projectId = decodeURIComponent(projectId); // Decode project ID
   if (!mergeRequestIid && !branchName) {
     throw new ToolInputError(MERGE_REQUEST_IDENTIFIER_REQUIRED);
@@ -6252,6 +6274,24 @@ async function getMergeRequestFileDiff(
   branchName?: string,
   unidiff?: boolean
 ): Promise<any[]> {
+  if (await isGitLab11()) {
+    if (unidiff) throw new ToolInputError("unidiff is not supported by GitLab 11.x.");
+    const changes = await getMergeRequestDiffs(projectId, mergeRequestIid, branchName);
+    const remaining = new Set(filePaths);
+    const results = changes.filter(change => {
+      if (!remaining.has(change.new_path) && !remaining.has(change.old_path)) return false;
+      remaining.delete(change.new_path);
+      remaining.delete(change.old_path);
+      return true;
+    });
+    return [
+      ...results,
+      ...[...remaining].map(path => ({
+        error: `File not found in merge request diffs: ${path}`,
+        hint: "Use list_merge_request_changed_files to verify the correct file paths.",
+      })),
+    ];
+  }
   projectId = decodeURIComponent(projectId);
   if (!mergeRequestIid && !branchName) {
     throw new ToolInputError(MERGE_REQUEST_IDENTIFIER_REQUIRED);
@@ -6377,6 +6417,13 @@ async function updateMergeRequest(
   mergeRequestIid?: number | string,
   branchName?: string
 ): Promise<GitLabMergeRequest> {
+  await rejectGitLab11Parameters(options, ["reviewer_ids"]);
+  if (options.draft !== undefined && (await isGitLab11())) {
+    const title =
+      options.title ?? (await getMergeRequest(projectId, mergeRequestIid, branchName)).title;
+    const { draft, ...legacyOptions } = options;
+    options = { ...legacyOptions, title: gitLab11DraftTitle(title, draft) };
+  }
   projectId = decodeURIComponent(projectId); // Decode project ID
   if (!mergeRequestIid && !branchName) {
     throw new ToolInputError(MERGE_REQUEST_IDENTIFIER_REQUIRED);
@@ -6415,6 +6462,19 @@ async function mergeMergeRequest(
   options: Omit<z.infer<typeof MergeMergeRequestSchema>, "project_id" | "merge_request_iid">,
   mergeRequestIid?: number | string
 ): Promise<GitLabMergeRequest> {
+  if (options.auto_merge !== undefined) {
+    const metadata = await fetchGitLabVersionMetadata();
+    const version = metadata ? parseGitLabVersion(metadata.version) : null;
+    if (!version) {
+      throw new ToolInputError(
+        "Cannot determine the GitLab version for auto_merge. Verify access to /api/v4/version first."
+      );
+    }
+    if (version.major === 11) {
+      const { auto_merge, ...legacyOptions } = options;
+      options = { ...legacyOptions, merge_when_pipeline_succeeds: auto_merge };
+    }
+  }
   projectId = decodeURIComponent(projectId); // Decode project ID
   const url = new URL(
     `${getEffectiveApiUrl()}/projects/${encodeGitLabPathSegment(getEffectiveProjectId(projectId))}/merge_requests/${encodeGitLabPathSegment(mergeRequestIid)}/merge`
@@ -6997,14 +7057,22 @@ function healthCheckTransportErrorResult(error: unknown) {
   };
 }
 
+const gitLabVersionMetadata = new Map<string, GitLabInstanceVersionMetadata>();
+
 async function fetchGitLabVersionMetadata(): Promise<GitLabInstanceVersionMetadata | null> {
+  const apiUrl = getEffectiveApiUrl();
+  const cached = gitLabVersionMetadata.get(apiUrl);
+  if (cached) return cached;
   try {
-    const response = await fetch(`${getEffectiveApiUrl()}/version`, {
+    const response = await fetch(`${apiUrl}/version`, {
       ...getFetchConfig(),
     });
     if (!response.ok) return null;
     const data: unknown = await response.json();
-    return parseGitLabVersionApiResponse(data);
+    const metadata = parseGitLabVersionApiResponse(data);
+    // shortcut: cache successful versions until restart; restart after a GitLab upgrade.
+    if (metadata) gitLabVersionMetadata.set(apiUrl, metadata);
+    return metadata;
   } catch {
     return null;
   }
@@ -7013,6 +7081,32 @@ async function fetchGitLabVersionMetadata(): Promise<GitLabInstanceVersionMetada
 async function fetchGitLabInstanceVersion(): Promise<string | null> {
   const metadata = await fetchGitLabVersionMetadata();
   return metadata?.version ?? null;
+}
+
+async function isGitLab11(): Promise<boolean> {
+  const version = await fetchGitLabInstanceVersion();
+  if (IS_OLD && (version === null || parseGitLabVersion(version) === null)) {
+    throw new ToolInputError(
+      "Cannot determine the GitLab version. Verify access to /api/v4/version before using legacy compatibility features."
+    );
+  }
+  return version !== null && parseGitLabVersion(version)?.major === 11;
+}
+
+async function rejectGitLab11Parameters(options: object, fields: string[]): Promise<void> {
+  const unsupported = fields.filter(
+    field => (options as Record<string, unknown>)[field] !== undefined
+  );
+  if (unsupported.length > 0 && (await isGitLab11())) {
+    throw new ToolInputError(
+      `${unsupported.join(", ")} not supported by GitLab 11.x. Omit these parameters.`
+    );
+  }
+}
+
+function gitLab11DraftTitle(title: string, draft: boolean): string {
+  const prefix = /^(?:(?:WIP:|\[WIP\]|\(WIP\))\s*)+/i;
+  return draft ? (prefix.test(title) ? title : `WIP: ${title}`) : title.replace(prefix, "");
 }
 
 /**
@@ -7205,6 +7299,7 @@ async function getMergeRequestVersion(
   versionId: number | string,
   unidiff?: boolean
 ): Promise<GitLabMergeRequestVersionDetail> {
+  if (unidiff) await rejectGitLab11Parameters({ unidiff }, ["unidiff"]);
   projectId = decodeURIComponent(projectId); // Decode project ID
   const url = new URL(
     `${getEffectiveApiUrl()}/projects/${encodeGitLabPathSegment(
@@ -8527,8 +8622,17 @@ async function validateCiLint(
   options: Omit<ValidateCiLintOptions, "project_id">
 ): Promise<GitLabCiLintResult> {
   projectId = decodeURIComponent(projectId);
+  const effectiveProjectId = getEffectiveProjectId(projectId);
+  const legacy = await isGitLab11();
+  if (legacy && (options.dry_run || options.include_jobs || options.ref !== undefined)) {
+    throw new ToolInputError(
+      "GitLab 11.x CI lint only validates content; dry_run, include_jobs and ref are not supported."
+    );
+  }
   const url = new URL(
-    `${getEffectiveApiUrl()}/projects/${encodeGitLabPathSegment(getEffectiveProjectId(projectId))}/ci/lint`
+    legacy
+      ? `${getEffectiveApiUrl()}/ci/lint`
+      : `${getEffectiveApiUrl()}/projects/${encodeGitLabPathSegment(effectiveProjectId)}/ci/lint`
   );
 
   const response = await fetch(url.toString(), {
@@ -8539,6 +8643,15 @@ async function validateCiLint(
 
   await handleGitLabError(response);
   const data = await response.json();
+  if (legacy) {
+    const result = z
+      .object({ status: z.enum(["valid", "invalid"]), errors: z.array(z.string()) })
+      .parse(data);
+    return GitLabCiLintResultSchema.parse({
+      valid: result.status === "valid",
+      errors: result.errors,
+    });
+  }
   return GitLabCiLintResultSchema.parse(data);
 }
 
@@ -8546,6 +8659,16 @@ async function validateProjectCiLint(
   projectId: string,
   options: Omit<ValidateProjectCiLintOptions, "project_id">
 ): Promise<GitLabCiLintResult> {
+  if (await isGitLab11()) {
+    if (options.dry_run || options.include_jobs || options.dry_run_ref !== undefined) {
+      throw new ToolInputError("GitLab 11.x CI lint cannot simulate a pipeline or return jobs.");
+    }
+    const file = await getFileContents(projectId, ".gitlab-ci.yml", options.content_ref);
+    if (Array.isArray(file) || file.encoding !== "utf8") {
+      throw new ToolInputError("The project CI config must be a UTF-8 .gitlab-ci.yml file.");
+    }
+    return validateCiLint(projectId, { content: file.content });
+  }
   projectId = decodeURIComponent(projectId);
   const url = new URL(
     `${getEffectiveApiUrl()}/projects/${encodeGitLabPathSegment(getEffectiveProjectId(projectId))}/ci/lint`
@@ -9005,6 +9128,17 @@ async function getPipelineScheduleVariable(
   pipelineScheduleId: number | string,
   key: string
 ): Promise<GitLabPipelineScheduleVariable> {
+  if (await isGitLab11()) {
+    const schedule = await getPipelineSchedule(projectId, pipelineScheduleId);
+    if (!schedule.variables) {
+      throw new ToolInputError(
+        "The schedule response did not include variables. Verify access to the schedule variables."
+      );
+    }
+    const variable = schedule.variables.find(item => item.key === key);
+    if (!variable) throw new ToolInputError(`Pipeline schedule variable not found: ${key}`);
+    return variable;
+  }
   projectId = decodeURIComponent(projectId); // Decode project ID
   const url = new URL(
     `${getEffectiveApiUrl()}/projects/${encodeGitLabPathSegment(getEffectiveProjectId(projectId))}/pipeline_schedules/${encodeGitLabPathSegment(pipelineScheduleId)}/variables/${encodeGitLabPathSegment(key)}`
@@ -9377,13 +9511,14 @@ async function cancelPipelineJob(
  */
 async function getRepositoryTree(
   options: GetRepositoryTreeOptions
-): Promise<{ items: GitLabTreeItem[]; next_page_token?: string }> {
+): Promise<{ items: GitLabTreeItem[]; next_page_token?: string; next_page?: number }> {
   options.project_id = decodeURIComponent(options.project_id); // Decode project_id within options
   const queryParams = new URLSearchParams();
   if (options.path) queryParams.append("path", options.path);
   if (options.ref) queryParams.append("ref", options.ref);
   if (options.recursive) queryParams.append("recursive", "true");
   if (options.per_page) queryParams.append("per_page", options.per_page.toString());
+  if (options.page) queryParams.append("page", options.page.toString());
   if (options.page_token) queryParams.append("page_token", options.page_token);
   if (options.pagination) queryParams.append("pagination", options.pagination);
 
@@ -9408,7 +9543,12 @@ async function getRepositoryTree(
     response.headers.get("x-next-page-token") ||
     (options.pagination === "keyset" ? response.headers.get("x-next-page") : null) ||
     undefined;
-  return { items, next_page_token };
+  const offsetNextPage =
+    options.pagination !== "keyset" ? response.headers.get("x-next-page") : null;
+  const nextPage = offsetNextPage ? Number(offsetNextPage) : undefined;
+  const next_page =
+    nextPage !== undefined && Number.isInteger(nextPage) && nextPage > 0 ? nextPage : undefined;
+  return { items, next_page_token, next_page };
 }
 
 /**
@@ -12188,6 +12328,52 @@ async function deleteSnippet(projectId: string | undefined, snippetId: number): 
 // Request handlers are now registered inside createServer() factory function
 // to ensure each transport connection gets its own Server instance (GHSA-345p-7cg4-v4c7).
 
+const gitLab11UnsupportedTools = new Set([
+  "get_pipeline_test_report",
+  "get_pipeline_test_report_summary",
+  "update_pipeline_metadata",
+  "list_pipeline_trigger_jobs",
+  "list_pipeline_schedule_pipelines",
+  "play_pipeline_schedule",
+  "list_job_artifacts",
+  "update_protected_branch",
+]);
+
+const gitLab11UnsupportedParameters: Record<string, string[]> = {
+  get_repository_tree: ["page_token"],
+  list_commits: ["author", "first_parent", "order", "trailers"],
+  list_merge_requests: [
+    "assignee_username",
+    "author_username",
+    "reviewer_id",
+    "reviewer_username",
+    "approved_by_usernames",
+    "with_labels_details",
+  ],
+  list_group_merge_requests: [
+    "assignee_username",
+    "author_username",
+    "reviewer_id",
+    "reviewer_username",
+    "approved_by_usernames",
+    "with_labels_details",
+    "non_archived",
+  ],
+  list_pipelines: ["updated_after", "updated_before"],
+  list_pipeline_jobs: ["include_retried"],
+  create_pipeline: ["inputs"],
+  trigger_pipeline: ["inputs"],
+  create_pipeline_schedule: ["inputs"],
+  update_pipeline_schedule: ["inputs"],
+  play_pipeline_job: ["job_variables_attributes", "job_inputs"],
+  play_pipeline_jobs: ["job_variables_attributes", "job_inputs"],
+  retry_pipeline_job: ["job_inputs"],
+  cancel_pipeline_job: ["force"],
+  rebase_merge_request: ["skip_ci"],
+  approve_merge_request: ["approval_password"],
+  protect_branch: ["allow_force_push", "code_owner_approval_required"],
+};
+
 async function handleToolCall(params: any) {
   try {
     if (!params.arguments) {
@@ -12224,6 +12410,25 @@ async function handleToolCall(params: any) {
           : `${params.name} is not allowed in modify mode (delete and teardown operations are disabled)`
       );
     }
+
+    if (gitLab11UnsupportedTools.has(params.name) && (await isGitLab11())) {
+      throw new ToolInputError(`${params.name} is not supported by GitLab 11.x.`);
+    }
+    const unsupportedFields = [...(gitLab11UnsupportedParameters[params.name] ?? [])];
+    if (params.name === "get_repository_tree" && params.arguments.pagination === "keyset") {
+      unsupportedFields.push("pagination");
+    }
+    if (
+      (params.name === "list_merge_requests" || params.name === "list_group_merge_requests") &&
+      params.arguments.order_by !== undefined &&
+      !["created_at", "updated_at"].includes(params.arguments.order_by)
+    ) {
+      unsupportedFields.push("order_by");
+    }
+    if (params.name === "list_pipelines" && params.arguments.order_by === "updated_at") {
+      unsupportedFields.push("order_by");
+    }
+    await rejectGitLab11Parameters(params.arguments, unsupportedFields);
 
     logger.info({ tool: params.name, event: "tool_call_start" }, `tool_call_start: ${params.name}`);
     switch (params.name) {
@@ -13971,7 +14176,9 @@ async function handleToolCall(params: any) {
 
       case "get_repository_tree": {
         const args = GetRepositoryTreeSchema.parse(params.arguments);
-        const { items, next_page_token } = await getRepositoryTree(args);
+        const { items, next_page_token, next_page } = await getRepositoryTree(args);
+        const legacyOffsetContinuation =
+          next_page !== undefined && args.pagination !== "keyset" && (await isGitLab11());
         const result =
           args.pagination === "keyset" || next_page_token
             ? {
@@ -13981,7 +14188,9 @@ async function handleToolCall(params: any) {
                   ? "Pass next_page_token as page_token with pagination=keyset to retrieve the next page."
                   : "No next_page_token was returned; this is the final keyset page.",
               }
-            : items;
+            : args.page !== undefined || legacyOffsetContinuation
+              ? { items, ...(next_page !== undefined ? { next_page } : {}) }
+              : items;
         return {
           content: [{ type: "text", text: JSON.stringify(result) }],
         };
@@ -18442,8 +18651,8 @@ async function runServer() {
         latestVersion => {
           if (latestVersion) {
             logger.warn(
-              `A newer version of @zereight/mcp-gitlab is available: v${latestVersion} (current: v${SERVER_VERSION}). ` +
-                `Upgrade with \`brew upgrade zereight-mcp-gitlab\`, \`npx -y @zereight/mcp-gitlab@latest\`, or \`npm install -g @zereight/mcp-gitlab\`. ` +
+              `A newer version of gitlab-mcp-legacy is available: v${latestVersion} (current: v${SERVER_VERSION}). ` +
+                `Upgrade with \`npx -y gitlab-mcp-legacy@latest\` or \`npm install -g gitlab-mcp-legacy\`. ` +
                 `Set GITLAB_DISABLE_VERSION_CHECK=true to disable this check.`
             );
           }

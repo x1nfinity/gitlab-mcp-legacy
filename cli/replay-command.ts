@@ -1,6 +1,6 @@
 import { snakeToKebab } from "./args.js";
 
-const BINARY = "zereight-mcp-gitlab";
+const BINARY = "gitlab-mcp-legacy";
 const SIMPLE_SHELL_TOKEN = /^[A-Za-z0-9._:/=+-]+$/;
 const SECRET_ARGUMENT_NAMES = new Set([
   "token",

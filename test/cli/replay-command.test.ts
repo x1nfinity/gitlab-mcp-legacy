@@ -13,7 +13,7 @@ describe("When buildToolReplayCommand prints a CLI invocation", () => {
 
       assert.equal(
         command,
-        "zereight-mcp-gitlab tool list_issues --project-id 123 --state opened"
+        "gitlab-mcp-legacy tool list_issues --project-id 123 --state opened"
       );
     });
   });

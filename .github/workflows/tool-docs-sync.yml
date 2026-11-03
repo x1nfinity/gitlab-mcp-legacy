@@ -42,7 +42,7 @@ concurrency:
 
 jobs:
   generate:
-    if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
+    if: github.repository == 'zereight/gitlab-mcp' && (github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -92,6 +92,7 @@ jobs:
           retention-days: 1
 
   open-pr:
+    if: github.repository == 'zereight/gitlab-mcp'
     needs: generate
     runs-on: ubuntu-latest
     timeout-minutes: 10

@@ -30,6 +30,11 @@ REPO_URL=$(git remote get-url origin 2>/dev/null | sed 's|git@github.com:|https:
 REPO_OWNER=$(echo "$REPO_URL" | cut -d'/' -f4)
 REPO_NAME=$(echo "$REPO_URL" | cut -d'/' -f5)
 
+if [ "$REPO_URL" != "https://github.com/x1nfinity/gitlab-mcp-legacy" ]; then
+  echo "❌ Release origin must be https://github.com/x1nfinity/gitlab-mcp-legacy."
+  exit 1
+fi
+
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "❌ Working tree is not clean. Commit or stash changes before releasing."
   exit 1
@@ -119,10 +124,10 @@ sync_pinned_npx_docs_version() {
 
   # Git tags can outpace npm when publish fails; pin must exist on the registry.
   # Only stable X.Y.Z versions qualify; @next builds are pre-releases.
-  if ! npm view "@zereight/mcp-gitlab@${version}" version >/dev/null 2>&1; then
+  if ! npm view "gitlab-mcp-legacy@${version}" version >/dev/null 2>&1; then
     local npm_pin
     npm_pin=$(
-      npm view @zereight/mcp-gitlab versions --json 2>/dev/null | node -e '
+      npm view gitlab-mcp-legacy versions --json 2>/dev/null | node -e '
 const wanted = process.argv[1];
 let raw = "";
 process.stdin.on("data", (c) => (raw += c));
@@ -166,8 +171,8 @@ for (const file of roots.flatMap(files)) {
   const before = fs.readFileSync(file, "utf8");
   // A pre-release pin (@2.3.5-next.4) is replaced whole, not just its X.Y.Z part.
   const after = before.replace(
-    /@zereight\/mcp-gitlab@\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?/g,
-    `@zereight/mcp-gitlab@${version}`
+    /gitlab-mcp-legacy@\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?/g,
+    `gitlab-mcp-legacy@${version}`
   );
   if (after !== before) fs.writeFileSync(file, after);
 }
@@ -634,7 +639,7 @@ git push origin HEAD
 git push origin "v$NEW_VERSION"
 
 # Create GitHub release with the notes
-gh release create "v$NEW_VERSION" --title "v$NEW_VERSION" --notes "$RELEASE_NOTES"
+gh release create "v$NEW_VERSION" --repo "$REPO_OWNER/$REPO_NAME" --title "v$NEW_VERSION" --notes "$RELEASE_NOTES"
 
 echo "✅ Release v$NEW_VERSION created and pushed!"
-echo "GitHub Actions will now publish to npm and Docker Hub automatically."
+echo "Publish gitlab-mcp-legacy to npm manually after reviewing the release artifact."

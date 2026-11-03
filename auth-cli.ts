@@ -13,7 +13,7 @@ const logger = createLogger("gitlab-mcp-auth");
 const DEFAULT_API_URL = "https://gitlab.com";
 const DEFAULT_REDIRECT_URI = "http://127.0.0.1:8888/callback";
 
-export const AUTH_CLI_HELP = `Usage: zereight-mcp-gitlab auth [options]
+export const AUTH_CLI_HELP = `Usage: gitlab-mcp-legacy auth [options]
 
 Run GitLab OAuth Device Authorization Grant (GitLab 17.9+; 17.2–17.8 need
 oauth2_device_grant_flow) and store a token at the same path used by

@@ -17,7 +17,7 @@ export function recoveryHintFor(message: string): string | undefined {
     }
   }
   if (/\b401\b/.test(message) || /unauthorized/i.test(message)) {
-    return "set GITLAB_PERSONAL_ACCESS_TOKEN (or run `zereight-mcp-gitlab auth`) and retry.";
+    return "set GITLAB_PERSONAL_ACCESS_TOKEN (or run `gitlab-mcp-legacy auth`) and retry.";
   }
   if (/rate limit/i.test(message)) {
     return "wait and retry; lower per_page or paginate if the client is bursting.";

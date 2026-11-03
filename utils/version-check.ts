@@ -1,5 +1,5 @@
 const DEFAULT_NPM_REGISTRY = "https://registry.npmjs.org";
-const PACKAGE_LATEST_PATH = "@zereight/mcp-gitlab/latest";
+const PACKAGE_LATEST_PATH = "gitlab-mcp-legacy/latest";
 const RELEASE_VERSION_PATTERN = /^\d+\.\d+\.\d+$/;
 
 type FetchLike = (input: string | URL, init?: RequestInit) => Promise<Response>;

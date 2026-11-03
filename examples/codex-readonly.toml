@@ -1,0 +1,46 @@
+# Replace the example API URL and absolute token-file path before use.
+[mcp_servers.gitlab_legacy]
+command = "npx"
+args = ["-y", "gitlab-mcp-legacy@0.1.0"]
+enabled = true
+default_tools_approval_mode = "writes"
+enabled_tools = [
+  "health_check",
+  "search_repositories",
+  "list_projects",
+  "get_project",
+  "get_repository_tree",
+  "get_file_contents",
+  "list_commits",
+  "get_commit",
+  "list_branches",
+  "get_branch",
+  "list_tags",
+  "get_tag",
+  "list_merge_requests",
+  "get_merge_request",
+  "get_merge_request_diffs",
+  "list_merge_request_changed_files",
+  "list_merge_request_diffs",
+  "get_merge_request_file_diff",
+  "list_merge_request_versions",
+  "get_merge_request_version",
+  "mr_discussions",
+  "list_merge_request_pipelines",
+  "list_pipelines",
+  "get_pipeline",
+  "list_pipeline_jobs",
+  "get_pipeline_job",
+  "get_pipeline_job_output",
+  "list_pipeline_schedules",
+]
+
+[mcp_servers.gitlab_legacy.env]
+GITLAB_API_URL = "https://gitlab.example.com/api/v4"
+GITLAB_PERSONAL_ACCESS_TOKEN_FILE = "/absolute/path/to/gitlab-token"
+GITLAB_IS_OLD = "true"
+GITLAB_PERMISSION_MODE = "readonly"
+GITLAB_TOOLSETS = "repositories"
+GITLAB_TOOLS = "health_check,search_repositories,list_projects,get_project,get_repository_tree,get_file_contents,list_commits,get_commit,list_branches,get_branch,list_tags,get_tag,list_merge_requests,get_merge_request,get_merge_request_diffs,list_merge_request_changed_files,list_merge_request_diffs,get_merge_request_file_diff,list_merge_request_versions,get_merge_request_version,mr_discussions,list_merge_request_pipelines,list_pipelines,get_pipeline,list_pipeline_jobs,get_pipeline_job,get_pipeline_job_output,list_pipeline_schedules"
+GITLAB_DENIED_TOOLS_REGEX = "^(discover_tools|help)$"
+GITLAB_DISABLE_VERSION_CHECK = "true"

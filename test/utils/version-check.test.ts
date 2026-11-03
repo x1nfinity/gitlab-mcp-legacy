@@ -91,7 +91,7 @@ describe("When fetchLatestVersion picks the registry", () => {
     assert.equal(latest, "2.1.31");
     assert.deepEqual(calls, [
       {
-        url: "https://registry.npmjs.org/@zereight/mcp-gitlab/latest",
+        url: "https://registry.npmjs.org/gitlab-mcp-legacy/latest",
         authorization: null,
         redirect: undefined,
       },
@@ -106,7 +106,7 @@ describe("When fetchLatestVersion picks the registry", () => {
       "https://npm.internal.example/npm/"
     );
     assert.equal(latest, "2.1.31");
-    assert.equal(calls[0]?.url, "https://npm.internal.example/npm/@zereight/mcp-gitlab/latest");
+    assert.equal(calls[0]?.url, "https://npm.internal.example/npm/gitlab-mcp-legacy/latest");
     assert.equal(calls[0]?.authorization, null);
   });
 
@@ -118,7 +118,7 @@ describe("When fetchLatestVersion picks the registry", () => {
       "https://npm.internal.example"
     );
     assert.equal(latest, "2.1.31");
-    assert.equal(calls[0]?.url, "https://npm.internal.example/@zereight/mcp-gitlab/latest");
+    assert.equal(calls[0]?.url, "https://npm.internal.example/gitlab-mcp-legacy/latest");
   });
 
   for (const [label, registry] of [
@@ -140,7 +140,7 @@ describe("When fetchLatestVersion picks the registry", () => {
         registry
       );
       assert.equal(latest, "2.1.31");
-      assert.equal(calls[0]?.url, "https://registry.npmjs.org/@zereight/mcp-gitlab/latest");
+      assert.equal(calls[0]?.url, "https://registry.npmjs.org/gitlab-mcp-legacy/latest");
       assert.equal(calls[0]?.authorization, null);
     });
   }
@@ -148,7 +148,7 @@ describe("When fetchLatestVersion picks the registry", () => {
 
 const CWD_SECRET_ENV = "GITLAB_MCP_VERSION_CHECK_TEST_SECRET";
 const CWD_SECRET = "glpat-version-check-test-secret";
-const PUBLIC_LATEST_URL = "https://registry.npmjs.org/@zereight/mcp-gitlab/latest";
+const PUBLIC_LATEST_URL = "https://registry.npmjs.org/gitlab-mcp-legacy/latest";
 
 type FakeRegistry = {
   origin: string;

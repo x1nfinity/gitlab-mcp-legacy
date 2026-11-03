@@ -2,7 +2,7 @@ import { allTools } from "../tools/registry.js";
 import { readObjectSchema, snakeToKebab } from "./args.js";
 import { CURATED_COMMANDS, listGroupActions, listGroups } from "./curated.js";
 
-const BINARY = "zereight-mcp-gitlab";
+const BINARY = "gitlab-mcp-legacy";
 
 export function globalHelpText(): string {
   const groups = listGroups().map(group => `  ${group}`).join("\n");

@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   notes:
+    if: github.repository == 'zereight/gitlab-mcp'
     name: Release notes
     runs-on: ubuntu-latest
     timeout-minutes: 5

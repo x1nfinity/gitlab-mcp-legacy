@@ -19,17 +19,17 @@ export interface SetupResult {
 }
 
 const DEFAULT_API_URL = "https://gitlab.com/api/v4";
-const SKILL_INSTALL = "npx skills add zereight/gitlab-mcp --skill gitlab-mcp-skill";
+const SKILL_INSTALL = "npx skills add x1nfinity/gitlab-mcp-legacy --skill gitlab-mcp-skill";
 
 export function setupHelpText(): string {
-  return `zereight-mcp-gitlab setup
+  return `gitlab-mcp-legacy setup
 
 Print (or write) a local MCP client config. Tokens stay in the environment.
 
 Usage:
-  zereight-mcp-gitlab setup --cursor [--oauth] [--write] [--dir PATH]
-  zereight-mcp-gitlab setup --claude [--oauth] [--write]
-  zereight-mcp-gitlab setup --help
+  gitlab-mcp-legacy setup --cursor [--oauth] [--write] [--dir PATH]
+  gitlab-mcp-legacy setup --claude [--oauth] [--write]
+  gitlab-mcp-legacy setup --help
 
 Flags:
   --cursor    Cursor mcp.json snippet (default path .cursor/mcp.json)
@@ -75,7 +75,7 @@ export function cursorMcpConfig(options: SetupOptions): Record<string, unknown> 
   return {
     mcpServers: {
       gitlab: {
-        command: "zereight-mcp-gitlab",
+        command: "gitlab-mcp-legacy",
         env,
       },
     },
@@ -86,7 +86,7 @@ export function claudeMcpAddCommand(options: SetupOptions): string {
   const envFlags = options.oauth
     ? `--env GITLAB_USE_OAUTH=true --env GITLAB_API_URL=${options.apiUrl}`
     : `--env GITLAB_PERSONAL_ACCESS_TOKEN="$GITLAB_PERSONAL_ACCESS_TOKEN" --env GITLAB_API_URL=${options.apiUrl}`;
-  return `claude mcp add gitlab --transport stdio --scope local ${envFlags} -- zereight-mcp-gitlab`;
+  return `claude mcp add gitlab --transport stdio --scope local ${envFlags} -- gitlab-mcp-legacy`;
 }
 
 export function runSetup(options: SetupOptions): SetupResult {

@@ -12,5 +12,5 @@ export const MCP_INSTRUCTIONS = [
   "discover_tools: omit category to list; pass a category to activate for this session. api is explicit-only (GITLAB_TOOLSETS=api).",
   "Shrink results: pass jmespath on any tool. Set GITLAB_MCP_COMPACT_RESULTS for oversized replies. Paginate get_pipeline_job_output.",
   "Prefer typed tools over execute_graphql. Do not enable gitlab_api_request unless you accept allowlist and safety-check bypass. Prompt injection can drive it.",
-  "Destructive tools change GitLab state. Use the CLI (zereight-mcp-gitlab) for full diffs, logs, and artifacts.",
+  "Destructive tools change GitLab state. Use the CLI (gitlab-mcp-legacy) for full diffs, logs, and artifacts.",
 ].join("\n");

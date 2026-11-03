@@ -580,7 +580,7 @@ describe("When running the auth command", () => {
         fetchImpl,
       });
 
-      assert.match(out.text(), /zereight-mcp-gitlab auth/);
+      assert.match(out.text(), /gitlab-mcp-legacy auth/);
       assert.equal(out.text().includes(DEVICE_CODE), false);
     });
   });

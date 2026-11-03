@@ -321,7 +321,7 @@ describe("When the server starts", () => {
         "GITLAB_JOB_TOKEN",
         "GITLAB_AUTH_COOKIE_PATH",
         "GITLAB_USE_OAUTH=true",
-        "https://zereight.github.io/gitlab-mcp/getting-started/",
+        "https://github.com/x1nfinity/gitlab-mcp-legacy#readme",
       ]) {
         assert.ok(run.stderr.includes(hint), `missing ${hint}`);
       }

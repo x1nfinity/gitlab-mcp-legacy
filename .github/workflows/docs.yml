@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.repository == 'zereight/gitlab-mcp'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -77,6 +78,7 @@ jobs:
           path: site
 
   deploy:
+    if: github.repository == 'zereight/gitlab-mcp'
     needs: build
     runs-on: ubuntu-latest
     # Pages deployment needs to publish the artifact and request an OIDC

@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   live-api-tests:
+    if: github.repository == 'zereight/gitlab-mcp'
     runs-on: ubuntu-latest
 
     steps:

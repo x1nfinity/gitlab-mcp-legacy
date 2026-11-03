@@ -63,7 +63,7 @@ describe("When compactMcpToolResult wraps an MCP tool reply", () => {
       assert.equal(payload.preview.length, 5);
       assert.equal(
         payload.cli,
-        "zereight-mcp-gitlab tool list_issues --project-id 123 --state opened"
+        "gitlab-mcp-legacy tool list_issues --project-id 123 --state opened"
       );
     });
   });

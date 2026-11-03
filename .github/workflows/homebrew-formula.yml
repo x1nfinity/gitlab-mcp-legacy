@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   sync:
+    if: github.repository == 'zereight/gitlab-mcp'
     runs-on: ubuntu-latest
     permissions:
       contents: write

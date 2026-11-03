@@ -83,17 +83,17 @@ describe("MCP_SERVER_NAME", { timeout: 20_000 }, () => {
     servers = [];
   });
 
-  test("defaults to zereight-gitlab-mcp-server when unset", async () => {
+  test("defaults to gitlab-mcp-legacy when unset", async () => {
     const { server, mcpUrl } = await launchWithServerName();
     servers.push(server);
 
     const response = await rawMcpRequest(mcpUrl, initializeBody);
 
     assert.strictEqual(response.status, 200, response.text);
-    assert.strictEqual(response.data?.result?.serverInfo?.name, "zereight-gitlab-mcp-server");
+    assert.strictEqual(response.data?.result?.serverInfo?.name, "gitlab-mcp-legacy");
     assert.strictEqual(
       response.data?.result?.serverInfo?.websiteUrl,
-      "https://zereight.github.io/gitlab-mcp/"
+      "https://github.com/x1nfinity/gitlab-mcp-legacy"
     );
     assert.match(response.data?.result?.serverInfo?.description ?? "", /^GitLab MCP server/);
   });
@@ -117,6 +117,6 @@ describe("MCP_SERVER_NAME", { timeout: 20_000 }, () => {
     const response = await rawMcpRequest(mcpUrl, initializeBody);
 
     assert.strictEqual(response.status, 200, response.text);
-    assert.strictEqual(response.data?.result?.serverInfo?.name, "zereight-gitlab-mcp-server");
+    assert.strictEqual(response.data?.result?.serverInfo?.name, "gitlab-mcp-legacy");
   });
 });

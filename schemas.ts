@@ -44,13 +44,13 @@ export const GitLabAuthorSchema = z.object({
 // Pipeline related schemas
 export const GitLabPipelineSchema = z.object({
   id: z.coerce.string(),
-  project_id: z.coerce.string(),
+  project_id: z.coerce.string().optional(),
   sha: z.string(),
   ref: z.string(),
   status: z.string(),
   source: z.string().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
   web_url: z.string(),
   duration: z.coerce.number().nullable().optional(),
   started_at: z.string().nullable().optional(),
@@ -108,6 +108,7 @@ export const GitLabPipelineJobSchema = z.object({
       username: z.string(),
       avatar_url: z.string().nullable().optional(),
     })
+    .nullable()
     .optional(),
   commit: z
     .object({
@@ -121,7 +122,7 @@ export const GitLabPipelineJobSchema = z.object({
   pipeline: z
     .object({
       id: z.coerce.string(),
-      project_id: z.coerce.string(),
+      project_id: z.coerce.string().optional(),
       status: z.string(),
       ref: z.string(),
       sha: z.string(),
@@ -1430,6 +1431,7 @@ export const GetRepositoryTreeSchema = z.object({
     .optional()
     .describe("The name of a repository branch or tag. Defaults to the default branch."),
   recursive: coerceBooleanString.optional().describe("Boolean value to get a recursive tree"),
+  page: z.coerce.number().int().positive().optional().describe("Page number for offset pagination"),
   per_page: z.coerce.number().optional().describe("Number of results to show per page"),
   page_token: z
     .string()
@@ -1441,7 +1443,7 @@ export const GetRepositoryTreeSchema = z.object({
     .string()
     .optional()
     .describe(
-      "Pagination method. Use 'keyset' for keyset-based pagination (required for repositories with many files). Non-keyset calls keep the legacy array response for backward compatibility; that legacy response shape is deprecated and may be removed in a future major release. Keyset calls return a structured response with items and next_page_token when more pages are available."
+      "Pagination method. Use 'keyset' for keyset pagination; responses contain items and next_page_token when available. Offset calls with an explicit page return items and optional next_page. GitLab 11.x offset calls also return this object when a next page exists. Modern offset calls with page omitted preserve the array response."
     ),
 });
 
@@ -1462,7 +1464,7 @@ export const GitLabCommitSchema = z.object({
   committed_date: z.string(),
   created_at: z.string().optional(), // Add created_at field
   message: z.string().optional(), // Add full message field
-  web_url: z.string(), // Changed from html_url to match GitLab API
+  web_url: z.string().optional(), // Changed from html_url to match GitLab API
   parent_ids: z.array(z.string()), // Changed from parents to match GitLab API
   stats: z
     .object({
@@ -1510,7 +1512,7 @@ export const GitLabReferenceSchema = z.object({
   name: z.string(), // Changed from ref to match GitLab API
   commit: z.object({
     id: z.string(), // Changed from sha to match GitLab API
-    web_url: z.string(), // Changed from url to match GitLab API
+    web_url: z.string().optional(), // Changed from url to match GitLab API
   }),
 });
 
@@ -2553,7 +2555,7 @@ export const GitLabBranchSchema = z.object({
     committer_name: z.string(),
     committer_email: z.string(),
     committed_date: z.string(),
-    web_url: z.string(),
+    web_url: z.string().optional(),
   }),
   merged: z.boolean(),
   protected: z.boolean(),
@@ -2645,19 +2647,32 @@ export const MergeMergeRequestSchema = ProjectParamsSchema.extend({
     .describe(
       "SHA of the source-branch HEAD from get_merge_request (`sha` or `diff_refs.head_sha`). If provided, GitLab merges only when HEAD still matches. GitLab 19.2+ groups may require this (Require a commit SHA on the merge requests API)."
     ),
-  auto_merge: coerceBooleanStringDefault(false)
+  auto_merge: coerceBooleanString
+    .optional()
     .describe("If true, the merge request merges when the pipeline succeeds."),
   merge_commit_message: z.string().optional().describe("Custom merge commit message"),
-  merge_when_pipeline_succeeds: coerceBooleanStringDefault(false)
+  merge_when_pipeline_succeeds: coerceBooleanString
+    .optional()
     .describe(
       "If true, the merge request merges when the pipeline succeeds. Deprecated in GitLab 17.11. Use `auto_merge` instead."
     ),
-  should_remove_source_branch: coerceBooleanStringDefault(false)
-    .describe("Remove source branch after merge"),
+  should_remove_source_branch: coerceBooleanStringDefault(false).describe(
+    "Remove source branch after merge"
+  ),
   squash_commit_message: z.string().optional().describe("Custom squash commit message"),
-  squash: coerceBooleanStringDefault(false)
-    .describe("Squash commits into a single commit when merging"),
-});
+  squash: coerceBooleanStringDefault(false).describe(
+    "Squash commits into a single commit when merging"
+  ),
+}).refine(
+  args =>
+    args.auto_merge === undefined ||
+    args.merge_when_pipeline_succeeds === undefined ||
+    args.auto_merge === args.merge_when_pipeline_succeeds,
+  {
+    message: "auto_merge and merge_when_pipeline_succeeds must agree when both are provided",
+    path: ["auto_merge"],
+  }
+);
 
 // Merge Request Approval schemas
 export const ApproveMergeRequestSchema = ProjectParamsSchema.extend({
@@ -2751,6 +2766,8 @@ export const GitLabApprovalRuleSchema = z.object({
 
 export const GitLabMergeRequestApprovalsResponseSchema = z.object({
   approved: z.coerce.boolean().optional(),
+  approvals_required: z.number().int().nonnegative().optional(),
+  approvals_left: z.number().int().nonnegative().optional(),
   user_has_approved: z.coerce.boolean().optional(),
   user_can_approve: z.coerce.boolean().optional(),
   approved_by: z
@@ -2766,6 +2783,8 @@ export const GitLabMergeRequestApprovalStateSchema = z.object({
   approval_rules_overwritten: z.coerce.boolean().optional(),
   rules: z.array(GitLabApprovalRuleSchema).optional(),
   approved: z.coerce.boolean().optional(),
+  approvals_required: z.number().int().nonnegative().optional(),
+  approvals_left: z.number().int().nonnegative().optional(),
   user_has_approved: z.coerce.boolean().optional(),
   user_can_approve: z.coerce.boolean().optional(),
   approved_by: z.array(GitLabApprovalUserSchema).optional(),
@@ -4455,7 +4474,7 @@ export const GitLabMergeRequestVersionSchema = z.object({
   merge_request_id: z.coerce.number(),
   state: z.string(),
   real_size: z.string(),
-  patch_id_sha: z.string(),
+  patch_id_sha: z.string().optional(),
 });
 
 export const GitLabMergeRequestVersionDetailSchema = GitLabMergeRequestVersionSchema.extend({
@@ -5035,8 +5054,8 @@ export const GitLabTagSchema = z.object({
       description: z.string(),
     })
     .nullish(),
-  protected: z.boolean(),
-  created_at: z.string().nullable(),
+  protected: z.boolean().optional(),
+  created_at: z.string().nullable().optional(),
 });
 
 // --- Snippet schemas ---

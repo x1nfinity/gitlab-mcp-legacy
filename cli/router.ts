@@ -125,7 +125,7 @@ function resolveCliUnsafe(
       if (parsed.help) {
         return { kind: "help", text: toolIndexHelpText() };
       }
-      return { kind: "usage", message: `Usage: zereight-mcp-gitlab tool <tool-name> [options]` };
+      return { kind: "usage", message: `Usage: gitlab-mcp-legacy tool <tool-name> [options]` };
     }
     if (parsed.help) {
       return { kind: "help", text: toolHelpText(action) };

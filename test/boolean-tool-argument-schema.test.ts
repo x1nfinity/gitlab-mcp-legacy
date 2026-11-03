@@ -62,9 +62,15 @@ describe("When parsing boolean tool arguments", () => {
         }
       });
 
-      test(`should default ${field} to false when omitted`, () => {
-        assert.equal(parse({})[field], false);
-      });
+      if (field === "auto_merge" || field === "merge_when_pipeline_succeeds") {
+        test(`should leave ${field} undefined when omitted`, () => {
+          assert.equal(parse({})[field], undefined);
+        });
+      } else {
+        test(`should default ${field} to false when omitted`, () => {
+          assert.equal(parse({})[field], false);
+        });
+      }
     }
   });
 

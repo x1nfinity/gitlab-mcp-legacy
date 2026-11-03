@@ -1,8 +1,8 @@
 {
-  "name": "@zereight/mcp-gitlab",
-  "version": "2.3.19",
-  "mcpName": "io.github.zereight/gitlab-mcp",
-  "description": "GitLab MCP server for projects, merge requests, issues, pipelines, wiki, releases, and more",
+  "name": "gitlab-mcp-legacy",
+  "version": "0.1.0",
+  "mcpName": "io.github.x1nfinity/gitlab-mcp-legacy",
+  "description": "GitLab MCP server with GitLab 11.11 compatibility for repositories, merge requests, pipelines, and more.",
   "keywords": [
     "gitlab",
     "gitlab-mcp",
@@ -20,25 +20,31 @@
     "oauth",
     "stdio",
     "sse",
-    "streamable-http"
+    "streamable-http",
+    "legacy",
+    "gitlab-11"
   ],
   "license": "MIT",
   "author": "zereight",
   "type": "module",
   "bin": {
+    "gitlab-mcp-legacy": "build/index.js",
     "mcp-gitlab": "build/index.js",
     "zereight-mcp-gitlab": "build/index.js"
   },
   "files": [
-    "build"
+    "build",
+    "docs/compatibility/gitlab-11.11.md",
+    "examples/codex-readonly.toml"
   ],
-  "homepage": "https://zereight.github.io/gitlab-mcp/",
+  "homepage": "https://github.com/x1nfinity/gitlab-mcp-legacy",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zereight/gitlab-mcp.git"
+    "url": "git+https://github.com/x1nfinity/gitlab-mcp-legacy.git"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -106,5 +112,11 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
     "typescript": "^5.8.2"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/x1nfinity/gitlab-mcp-legacy/issues"
+  },
+  "contributors": [
+    "x1nfinity"
+  ]
 }

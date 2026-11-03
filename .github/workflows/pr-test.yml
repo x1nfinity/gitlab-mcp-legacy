@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   test:
+    if: github.repository == 'zereight/gitlab-mcp'
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
@@ -60,7 +61,7 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    if: github.repository == 'zereight/gitlab-mcp' && (github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false)
 
     steps:
     - name: Checkout code
@@ -76,6 +77,7 @@ jobs:
         echo "Docker build verification passed"
 
   code-quality:
+    if: github.repository == 'zereight/gitlab-mcp'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -114,6 +116,7 @@ jobs:
         fi
 
   docs-build:
+    if: github.repository == 'zereight/gitlab-mcp'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

@@ -41,7 +41,7 @@ describe("When setup reads flags", () => {
     it("should print the skill install command without writing", () => {
       const result = runSetup(readSetupOptions({ cursor: "true", skill: "true" }));
 
-      assert.match(result.text, /npx skills add zereight\/gitlab-mcp/);
+      assert.match(result.text, /npx skills add x1nfinity\/gitlab-mcp-legacy/);
       assert.equal(result.writtenPath, undefined);
     });
   });
@@ -63,7 +63,7 @@ describe("When setup writes Cursor config", () => {
 
       assert.equal(typeof result.writtenPath, "string");
       assert.equal(written.mcpServers.other.command, "echo");
-      assert.equal(written.mcpServers.gitlab.command, "zereight-mcp-gitlab");
+      assert.equal(written.mcpServers.gitlab.command, "gitlab-mcp-legacy");
     });
   });
 });
@@ -75,7 +75,7 @@ describe("When the built setup CLI runs", () => {
       const result = await runBuiltSetup(["setup", "--help"]);
 
       assert.equal(result.exitCode, 0);
-      assert.match(result.stdout, /zereight-mcp-gitlab setup/);
+      assert.match(result.stdout, /gitlab-mcp-legacy setup/);
       assert.equal(result.stdout.includes("{"), false);
     });
   });

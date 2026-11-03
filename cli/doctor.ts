@@ -35,14 +35,14 @@ export interface DoctorReport {
 }
 
 export function doctorHelpText(): string {
-  return `zereight-mcp-gitlab doctor
+  return `gitlab-mcp-legacy doctor
 
 Check token presence, API URL, permission mode, toolsets, and package version.
 Does not print secret values.
 
 Usage:
-  zereight-mcp-gitlab doctor [--probe]
-  zereight-mcp-gitlab doctor --help
+  gitlab-mcp-legacy doctor [--probe]
+  gitlab-mcp-legacy doctor --help
 
 Flags:
   --probe    GET {apiUrl}/user with the configured credentials (network)
@@ -97,7 +97,7 @@ function credentialCheck(credentials: DoctorCredentials): DoctorCheck {
     ok: hasAny,
     detail: hasAny
       ? "a token, job token, cookie, or OAuth is configured (value hidden)"
-      : "set GITLAB_PERSONAL_ACCESS_TOKEN or run `zereight-mcp-gitlab auth`",
+      : "set GITLAB_PERSONAL_ACCESS_TOKEN or run `gitlab-mcp-legacy auth`",
   };
 }
 

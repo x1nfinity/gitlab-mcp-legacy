@@ -25,11 +25,7 @@ jobs:
   check-release:
     # Only a successful Docker Publish run for a release in this repository.
     # Docker Publish's own workflow_dispatch runs and failed runs skip.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'release' &&
-      github.event.workflow_run.head_repository.full_name == github.repository)
+    if: github.repository == 'zereight/gitlab-mcp' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'release' && github.event.workflow_run.head_repository.full_name == github.repository))
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -56,7 +52,7 @@ jobs:
 
   publish:
     needs: check-release
-    if: needs.check-release.outputs.prerelease == 'false'
+    if: github.repository == 'zereight/gitlab-mcp' && (needs.check-release.outputs.prerelease == 'false')
     permissions:
       contents: read
       id-token: write

@@ -151,7 +151,12 @@ export function parseApprovalsResponse(responseJson: unknown): GitLabMergeReques
   const approvedByUsernames = approvedByUsers.map(user => user.username);
 
   return GitLabMergeRequestApprovalStateSchema.parse({
-    approved: parsedApprovals.approved,
+    ...parsedApprovals,
+    approved:
+      parsedApprovals.approved ??
+      (parsedApprovals.approvals_left === undefined
+        ? undefined
+        : parsedApprovals.approvals_left === 0),
     user_has_approved: parsedApprovals.user_has_approved,
     user_can_approve: parsedApprovals.user_can_approve,
     approved_by: approvedByUsers,

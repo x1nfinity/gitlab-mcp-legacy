@@ -24,7 +24,7 @@ jobs:
   mcpb:
     # A GitHub pre-release must not replace the bundle behind
     # releases/latest/download/gitlab-mcp.mcpb.
-    if: github.event_name != 'release' || !github.event.release.prerelease
+    if: github.repository == 'zereight/gitlab-mcp' && (github.event_name != 'release' || !github.event.release.prerelease)
     runs-on: ubuntu-latest
     permissions:
       contents: write
